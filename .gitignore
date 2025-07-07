@@ -18,4 +18,35 @@ target
 #  be found at https://github.com/github/gitignore/blob/main/Global/JetBrains.gitignore
 #  and can be added to the global gitignore or merged into this file.  For a more nuclear
 #  option (not recommended) you can uncomment the following to ignore the entire idea folder.
-#.idea/
+.idea/
+
+# os specific
+.DS_Store
+
+# vscode
+.vscode/
+
+# cursor
+.cursorrules
+
+# local env
+.env
+
+# logs
+logs/
+
+# node
+node_modules/
+
+# vite
+.vite/
+
+# bun
+bun.lockb
+
+# bunx
+bunx-cache/
+
+# sqlx
+.sqlxconfig
+.sqlx/
