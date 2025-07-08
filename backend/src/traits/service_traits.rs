@@ -1,3 +1,5 @@
+#![allow(async_fn_in_trait)]
+
 use uuid::Uuid;
 use crate::domain::{Relation, CreateRelationPayload, GetRelationsParams, ApiResponse, User, UserAuthPayload, RelationStatus};
 

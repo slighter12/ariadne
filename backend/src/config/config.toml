@@ -3,7 +3,7 @@
 
 [database]
 # 資料庫連接 URL
-url = "postgres://postgres:password@localhost:5432/ariadne"
+url = "postgres://ariadne_user:ariadne_password@localhost:5432/ariadne_db"
 # 最大連接數
 max_connections = 5
 
