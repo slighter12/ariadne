@@ -7,9 +7,6 @@ In a labyrinth of misinformation and decontextualized video clips, Ariadne provi
 
 1. **Setup environment:**
    ```bash
-   # Copy environment file
-   cp backend/env.example backend/.env
-   
    # Complete setup (install dependencies + database)
    make setup
    ```
@@ -71,29 +68,21 @@ Run `make help` to see all available commands:
 ```
 .
 ├── backend/             # 後端程式碼
-│ ├── Cargo.toml
-│ ├── Cargo.lock
 │ ├── src/
-│ │ ├── main.rs          # 應用程式入口點
-│ │ ├── models.rs         # 資料結構定義
-│ │ ├── schema.rs         # 資料庫工具函數
-│ │ ├── routes.rs         # API 路由處理
-│ │ ├── state.rs          # 應用程式狀態管理
-│ │ └── utils.rs          # 工具函數
-│ ├── env.example        # 環境變數範例
+│ │ ├── config/         # 配置管理
+│ │ ├── domain/         # 領域層（資料模型、實體）
+│ │ ├── delivery/       # 交付層（路由、中間件）
+│ │ ├── services/       # 服務層（業務邏輯）
+│ │ ├── repositories/   # 資料存取層
+│ │ ├── traits/         # 介面定義
+│ │ ├── database/       # 資料庫配置
+│ │ ├── state.rs        # 應用狀態
+│ │ └── main.rs         # 應用入口
 │ └── Dockerfile
-├── frontend/            # 前端程式碼（待建立）
-├── database/            # 資料庫相關
-│ └── migrations/
-│     └── postgres/       # 資料庫遷移檔案
-│         ├── 20250704023739_create_relations_table.sql
-│         ├── 20250704023813_create_users_table.sql
-│         └── 20250704023839_create_approval_records_table.sql
-├── infrastructure/      # 基礎設施配置
-│ ├── docker-compose.yml # Docker 服務配置
-│ └── init.sql          # 資料庫初始化腳本
+├── frontend/           # 前端程式碼（待建立）
+├── database/           # 資料庫遷移檔案
+├── infrastructure/     # 基礎設施配置
 ├── Makefile            # 統一的管理命令
-├── .sqlxconfig         # SQLx 配置檔案
 ├── README.md
 └── TODO.md
 ```

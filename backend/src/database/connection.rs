@@ -3,11 +3,11 @@ use std::sync::Arc;
 use tracing::info;
 
 /// 建立資料庫連接池
-pub async fn create_connection_pool(database_url: &str) -> Result<Arc<Pool<Postgres>>, sqlx::Error> {
+pub async fn create_connection_pool(database_url: &str, max_connections: u32) -> Result<Arc<Pool<Postgres>>, sqlx::Error> {
     info!("🔌 Creating database connection pool...");
     
     let pool = PgPoolOptions::new()
-        .max_connections(5)
+        .max_connections(max_connections)
         .connect(database_url)
         .await?;
 
@@ -15,7 +15,7 @@ pub async fn create_connection_pool(database_url: &str) -> Result<Arc<Pool<Postg
     Ok(Arc::new(pool))
 }
 
-/// 取得資料庫連接池的引用
-pub fn get_db_pool(pool: &Arc<Pool<Postgres>>) -> &Pool<Postgres> {
-    pool.as_ref()
-} 
+// 取得資料庫連接池的引用
+// pub fn get_db_pool(pool: &Arc<Pool<Postgres>>) -> &Pool<Postgres> {
+//     pool.as_ref()
+// } 

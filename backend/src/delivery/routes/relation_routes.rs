@@ -5,7 +5,7 @@ use axum::{
     routing::get,
     Router,
 };
-use crate::models::{Relation, CreateRelationPayload, GetRelationsParams, ApiResponse};
+use crate::domain::{Relation, CreateRelationPayload, GetRelationsParams, ApiResponse};
 use crate::state::ConcreteAppState;
 use tracing::{error, info, debug, warn};
 

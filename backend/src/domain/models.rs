@@ -4,13 +4,14 @@ use uuid::Uuid;
 use chrono::{DateTime, Utc};
 
 // 關聯狀態 ENUM
-#[derive(Debug, Serialize, Deserialize, Type, Clone)]
+#[derive(Debug, Serialize, Deserialize, Type, Clone, PartialEq)]
 #[sqlx(type_name = "relation_status")]
 #[sqlx(rename_all = "lowercase")]
 pub enum RelationStatus {
     Pending,
     Approved,
     Rejected,
+    Deleted,  // 新增軟刪除狀態
 }
 
 // 關聯類型 ENUM

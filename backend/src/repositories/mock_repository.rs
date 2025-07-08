@@ -1,6 +1,6 @@
 use async_trait::async_trait;
 use uuid::Uuid;
-use crate::models::{Relation, CreateRelationPayload, GetRelationsParams, RelationStatus, User, UserAuthPayload};
+use crate::domain::{Relation, CreateRelationPayload, GetRelationsParams, RelationStatus, User, UserAuthPayload};
 use crate::traits::{RelationRepositoryTrait, UserRepositoryTrait};
 use sqlx::Error;
 
@@ -70,10 +70,6 @@ impl RelationRepositoryTrait for MockRelationRepository {
         } else {
             Err(Error::RowNotFound)
         }
-    }
-
-    async fn delete(&self, id: Uuid) -> Result<bool, Error> {
-        Ok(self.relations.contains_key(&id))
     }
 }
 
@@ -151,10 +147,6 @@ impl UserRepositoryTrait for MockUserRepository {
         } else {
             Err(Error::RowNotFound)
         }
-    }
-
-    async fn delete(&self, id: Uuid) -> Result<bool, Error> {
-        Ok(self.users.contains_key(&id))
     }
 }
 

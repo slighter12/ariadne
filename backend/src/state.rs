@@ -2,7 +2,6 @@ use sqlx::{Pool, Postgres};
 use std::sync::Arc;
 use crate::traits::{RelationRepositoryTrait, UserRepositoryTrait};
 use crate::services::{RelationService, UserService};
-use crate::database::{create_connection_pool, DatabaseConfig};
 
 // 應用程式狀態 - 使用泛型約束
 #[derive(Clone)]
@@ -24,9 +23,7 @@ where
     U: UserRepositoryTrait + Clone,
 {
     // 建立新的應用程式狀態
-    pub async fn new(database_url: &str, relation_repo: R, user_repo: U) -> Result<Self, sqlx::Error> {
-        let db_pool = create_connection_pool(database_url).await?;
-
+    pub async fn new(db_pool: Arc<Pool<Postgres>>, relation_repo: R, user_repo: U) -> Result<Self, sqlx::Error> {
         let relation_service = RelationService::new(relation_repo);
         let user_service = UserService::new(user_repo);
 
@@ -52,28 +49,6 @@ where
     #[allow(dead_code)]
     pub fn get_user_service(&self) -> &UserService<U> {
         &self.user_service
-    }
-}
-
-// 配置結構
-#[derive(Clone)]
-pub struct Config {
-    pub database_config: DatabaseConfig,
-    pub server_port: u16,
-    pub server_host: String,
-}
-
-impl Config {
-    // 從環境變數載入配置
-    pub fn from_env() -> Result<Self, Box<dyn std::error::Error>> {
-        Ok(Self {
-            database_config: DatabaseConfig::from_env()?,
-            server_port: std::env::var("SERVER_PORT")
-                .unwrap_or_else(|_| "8000".to_string())
-                .parse()?,
-            server_host: std::env::var("SERVER_HOST")
-                .unwrap_or_else(|_| "0.0.0.0".to_string()),
-        })
     }
 }
 

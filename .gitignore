@@ -50,3 +50,8 @@ bunx-cache/
 # sqlx
 .sqlxconfig
 .sqlx/
+
+# config
+config/*_test.toml
+config/*_test.json
+config/*_test.yaml

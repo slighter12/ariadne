@@ -1,5 +1,5 @@
 use uuid::Uuid;
-use crate::models::{Relation, CreateRelationPayload, GetRelationsParams, ApiResponse, RelationStatus};
+use crate::domain::{Relation, CreateRelationPayload, GetRelationsParams, ApiResponse, RelationStatus};
 use crate::traits::RelationRepositoryTrait;
 
 // Service Layer (Clean Architecture - Use Case Layer)
@@ -81,29 +81,81 @@ where
 
         Ok(ApiResponse::success(relation))
     }
+}
 
-    // 業務邏輯：刪除關聯
-    pub async fn delete_relation(&self, id: Uuid) -> Result<ApiResponse<bool>, String> {
-        // 檢查關聯是否存在
-        let existing = self.repository
-            .find_by_id(id)
-            .await
-            .map_err(|e| format!("Database error: {}", e))?;
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::repositories::mock_repository::MockRelationRepository;
+    use crate::domain::{RelationStatus, RelationType};
 
-        if existing.is_none() {
-            return Ok(ApiResponse::error("Relation not found".to_string()));
-        }
+    #[tokio::test]
+    async fn test_create_relation_success() {
+        // Arrange
+        let mock_repo = MockRelationRepository::new();
+        let service = RelationService::new(mock_repo);
+        
+        let payload = CreateRelationPayload {
+            source_video_id: "test_video_1".to_string(),
+            source_start_time: 0,
+            source_end_time: 10,
+            target_video_id: "test_video_2".to_string(),
+            target_start_time: 0,
+            target_end_time: 10,
+            relation_type: RelationType::Reference,
+            user_id: Some(Uuid::new_v4()),
+        };
 
-        // 調用 repository
-        let deleted = self.repository
-            .delete(id)
-            .await
-            .map_err(|e| format!("Database error: {}", e))?;
+        // Act
+        let result = service.create_relation(payload).await;
 
-        if deleted {
-            Ok(ApiResponse::success(true))
-        } else {
-            Ok(ApiResponse::error("Failed to delete relation".to_string()))
-        }
+        // Assert
+        assert!(result.is_ok());
+        let response = result.unwrap();
+        assert!(response.success);
+        let relation = response.data.unwrap();
+        assert_eq!(relation.source_video_id, "test_video_1");
+        assert_eq!(relation.target_video_id, "test_video_2");
+        assert_eq!(relation.status, RelationStatus::Pending);
+    }
+
+    #[tokio::test]
+    async fn test_get_relations_with_mock() {
+        // Arrange
+        let mock_repo = MockRelationRepository::new();
+        let service = RelationService::new(mock_repo);
+        
+        let params = GetRelationsParams {
+            video_id: "test_video".to_string(),
+            status: None,
+        };
+
+        // Act
+        let result = service.get_relations(params).await;
+
+        // Assert
+        assert!(result.is_ok());
+        let response = result.unwrap();
+        assert!(response.success);
+        let relations = response.data.unwrap();
+        assert!(relations.is_empty()); // Mock 預設為空
+    }
+
+    #[tokio::test]
+    async fn test_update_relation_status() {
+        // Arrange
+        let mock_repo = MockRelationRepository::new();
+        let service = RelationService::new(mock_repo);
+        let relation_id = Uuid::new_v4();
+
+        // Act
+        let result = service.update_relation_status(relation_id, RelationStatus::Approved).await;
+
+        // Assert
+        assert!(result.is_ok());
+        let response = result.unwrap();
+        assert!(response.success);
+        let relation = response.data.unwrap();
+        assert_eq!(relation.status, RelationStatus::Approved);
     }
 } 

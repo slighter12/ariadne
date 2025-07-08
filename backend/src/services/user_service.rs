@@ -1,5 +1,5 @@
 use uuid::Uuid;
-use crate::models::{User, UserAuthPayload, ApiResponse};
+use crate::domain::{User, UserAuthPayload, ApiResponse};
 use crate::traits::UserRepositoryTrait;
 
 // Service Layer (Clean Architecture - Use Case Layer)
@@ -75,5 +75,71 @@ where
             Ok(user) => Ok(ApiResponse::success(user)),
             Err(e) => Err(format!("Database error: {}", e)),
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::repositories::mock_repository::MockUserRepository;
+
+    #[tokio::test]
+    async fn test_create_user_success() {
+        // Arrange
+        let mock_repo = MockUserRepository::new();
+        let service = UserService::new(mock_repo);
+        
+        let payload = UserAuthPayload {
+            google_id: Some("test_google_id".to_string()),
+            email: "test@example.com".to_string(),
+            name: "Test User".to_string(),
+            avatar_url: Some("https://example.com/avatar.jpg".to_string()),
+        };
+
+        // Act
+        let result = service.create_user(payload).await;
+
+        // Assert
+        assert!(result.is_ok());
+        let response = result.unwrap();
+        assert!(response.success);
+        let user = response.data.unwrap();
+        assert_eq!(user.email, "test@example.com");
+        assert_eq!(user.name, "Test User");
+        assert_eq!(user.reputation, 0); // 新使用者預設聲望為 0
+    }
+
+    #[tokio::test]
+    async fn test_get_user_by_id_not_found() {
+        // Arrange
+        let mock_repo = MockUserRepository::new();
+        let service = UserService::new(mock_repo);
+        let user_id = Uuid::new_v4();
+
+        // Act
+        let result = service.get_user_by_id(user_id).await;
+
+        // Assert
+        assert!(result.is_ok());
+        let response = result.unwrap();
+        assert!(!response.success); // 使用者不存在
+        assert!(response.data.is_none());
+        assert_eq!(response.message.unwrap(), "User not found");
+    }
+
+    #[tokio::test]
+    async fn test_get_user_by_email() {
+        // Arrange
+        let mock_repo = MockUserRepository::new();
+        let service = UserService::new(mock_repo);
+
+        // Act
+        let result = service.get_user_by_email("nonexistent@example.com").await;
+
+        // Assert
+        assert!(result.is_ok());
+        let response = result.unwrap();
+        assert!(!response.success);
+        assert!(response.data.is_none());
     }
 } 

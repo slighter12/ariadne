@@ -1,7 +1,7 @@
 use async_trait::async_trait;
 use sqlx::{Pool, Postgres};
 use uuid::Uuid;
-use crate::models::{Relation, CreateRelationPayload, GetRelationsParams, RelationStatus};
+use crate::domain::{Relation, CreateRelationPayload, GetRelationsParams, RelationStatus};
 use crate::traits::RelationRepositoryTrait;
 
 // Concrete Implementation (Clean Architecture - Interface Adapter Layer)
@@ -74,16 +74,5 @@ impl RelationRepositoryTrait for RelationRepository {
         .bind(id)
         .fetch_one(&self.pool)
         .await
-    }
-
-    async fn delete(&self, id: Uuid) -> Result<bool, sqlx::Error> {
-        let result = sqlx::query!(
-            "DELETE FROM relations WHERE id = $1",
-            id
-        )
-        .execute(&self.pool)
-        .await?;
-
-        Ok(result.rows_affected() > 0)
     }
 } 

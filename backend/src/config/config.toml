@@ -1,0 +1,20 @@
+# Ariadne Backend Configuration
+# 統一配置檔案 - 可透過環境變數覆蓋
+
+[database]
+# 資料庫連接 URL
+url = "postgres://postgres:password@localhost:5432/ariadne"
+# 最大連接數
+max_connections = 5
+
+[server]
+# 伺服器監聽地址
+host = "0.0.0.0"
+# 伺服器監聽端口
+port = 8000
+
+[logging]
+# 日誌等級 (debug, info, warn, error)
+level = "info"
+# 是否啟用彩色輸出
+color = true 
