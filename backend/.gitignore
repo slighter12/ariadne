@@ -2,18 +2,24 @@
 target/
 Cargo.lock
 
-# IDE
-.vscode/
-.idea/
+# Rust backup files
+**/*.rs.bk
 
-# OS
-.DS_Store
-Thumbs.db
+# MSVC Windows builds
+*.pdb
 
-# Logs
-*.log
+# Cargo mutants
+**/mutants.out*/
 
 # Database
 *.db
 *.sqlite
 
+# SQLx
+.sqlxconfig
+.sqlx/
+
+# Config test files
+config/*_test.toml
+config/*_test.json
+config/*_test.yaml
