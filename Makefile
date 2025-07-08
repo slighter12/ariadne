@@ -45,31 +45,36 @@ install:
 	cargo install sqlx-cli --no-default-features --features postgres
 	@echo "Installing backend dependencies..."
 	cd backend && cargo build
+	@echo "Installing frontend dependencies..."
+	cd frontend && bun install
 	@echo "✅ Dependencies installed!"
 
 # 完整設置開發環境
 setup: install db-setup
 	@echo "✅ Full development environment setup complete!"
 	@echo "Run 'make docker-up' to start services"
-	@echo "Run 'make backend' for backend commands"
-	@echo "Run 'make frontend' for frontend commands"
+	@echo "Run 'make backend-run' for backend server"
+	@echo "Run 'make frontend-run' for frontend development server"
 
 # 建置所有專案
 build:
 	@echo "🔨 Building all projects..."
 	cd backend && cargo build
+	cd frontend && bun run build
 	@echo "✅ Build complete!"
 
 # 執行所有測試
 test:
 	@echo "🧪 Running all tests..."
 	cd backend && cargo test
+	cd frontend && bun run test
 	@echo "✅ Tests complete!"
 
 # 清理所有建置檔案
 clean:
 	@echo "🧹 Cleaning build files..."
 	cd backend && cargo clean
+	cd frontend && rm -rf dist node_modules/.vite
 	@echo "✅ Clean complete!"
 
 # =============================================================================
@@ -181,12 +186,14 @@ backend:
 frontend:
 	@echo "🎨 Frontend Development Commands:"
 	@echo ""
-	@echo "  make frontend-run     - 執行前端開發伺服器"
-	@echo "  make frontend-build   - 建置前端"
-	@echo "  make frontend-test    - 測試前端"
-	@echo "  make frontend-clean   - 清理前端"
+	@echo "  make frontend-run      - 執行前端開發伺服器"
+	@echo "  make frontend-build    - 建置前端"
+	@echo "  make frontend-test     - 測試前端"
+	@echo "  make frontend-clean    - 清理前端"
+	@echo "  make frontend-preview  - 預覽前端建置"
+	@echo "  make frontend-extension - 建置 Chrome Extension"
 	@echo ""
-	@echo "  make frontend-install - 安裝前端依賴"
+	@echo "  make frontend-install  - 安裝前端依賴"
 
 # =============================================================================
 # 後端特定命令
@@ -194,7 +201,7 @@ frontend:
 
 backend-run:
 	@echo "🚀 Starting backend server..."
-	cd backend && RUST_LOG=info cargo run
+	cd backend && cargo run
 
 backend-build:
 	@echo "🔨 Building backend..."
@@ -210,23 +217,36 @@ backend-clean:
 
 backend-install:
 	@echo "📦 Installing backend dependencies..."
-	cd backend && cargo build
+	cd backend && cargo install
 
 # =============================================================================
-# 前端特定命令（預留）
+# 前端特定命令
 # =============================================================================
 
 frontend-run:
-	@echo "🎨 Frontend commands will be implemented when frontend is added"
+	@echo "🎨 Starting frontend development server..."
+	cd frontend && bun run dev
 
 frontend-build:
-	@echo "🎨 Frontend commands will be implemented when frontend is added"
+	@echo "🔨 Building frontend..."
+	cd frontend && bun run build
 
 frontend-test:
-	@echo "🎨 Frontend commands will be implemented when frontend is added"
+	@echo "🧪 Testing frontend..."
+	cd frontend && bun run test
 
 frontend-clean:
-	@echo "🎨 Frontend commands will be implemented when frontend is added"
+	@echo "🧹 Cleaning frontend..."
+	cd frontend && rm -rf dist node_modules/.vite
 
 frontend-install:
-	@echo "🎨 Frontend commands will be implemented when frontend is added" 
+	@echo "📦 Installing frontend dependencies..."
+	cd frontend && bun install
+
+frontend-preview:
+	@echo "👀 Previewing frontend build..."
+	cd frontend && bun run preview
+
+frontend-extension:
+	@echo "🔧 Building Chrome Extension..."
+	cd frontend && rm -rf dist && bun run build:extension
