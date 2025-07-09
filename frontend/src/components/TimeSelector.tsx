@@ -114,7 +114,7 @@ export const TimeSelector: React.FC<TimeSelectorProps> = ({
       </div>
 
       {/* 時間範圍顯示 */}
-      <div className="bg-gray-50 p-3 rounded-lg">
+      <div className="bg-gray-50/80 backdrop-blur-sm p-3 rounded-lg">
         <div className="text-sm text-gray-600">
           選擇範圍: {formatTime(startTime)} - {formatTime(endTime)}
         </div>

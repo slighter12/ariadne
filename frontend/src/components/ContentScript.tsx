@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { createRoot } from 'react-dom/client';
-import type { VideoInfo, Relation, RelationFormData } from '../types';
+import type { VideoInfo, RelationDisplay, RelationFormData } from '../types';
 import { RelationForm } from './RelationForm';
 import { Notification } from './Notification';
 import { ApiService } from '../services/api';
@@ -9,7 +9,7 @@ import { isVideoPage, parseVideoInfo, watchYouTubePageChanges } from '../utils/y
 interface ContentScriptState {
   isVisible: boolean;
   videoInfo: VideoInfo | null;
-  relations: Relation[];
+  relations: RelationDisplay[];
   isLoading: boolean;
   error: string | null;
   notifications: Array<{ id: string; type: 'success' | 'error' | 'info' | 'warning'; message: string; duration?: number }>;
@@ -160,7 +160,7 @@ const ContentScript: React.FC = () => {
       ))}
 
       {/* 主要面板 */}
-      <div className="fixed top-4 right-4 z-40 w-96 bg-white rounded-lg shadow-xl border border-gray-200">
+      <div className="fixed top-4 right-4 z-40 w-96 bg-white/90 backdrop-blur-sm rounded-lg shadow-xl border border-gray-200">
         {/* 標題欄 */}
         <div className="flex items-center justify-between p-4 border-b border-gray-200">
           <h2 className="text-lg font-semibold text-gray-900">

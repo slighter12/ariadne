@@ -115,7 +115,7 @@ export const RelationForm: React.FC<RelationFormProps> = ({
               value={{ start: formData.sourceStartTime, end: formData.sourceEndTime }}
               onChange={handleSourceTimeChange}
               maxDuration={3600} // 預設最大時長 1 小時
-              className="border border-gray-200 rounded-lg p-4"
+              className="border border-gray-200 rounded-lg p-4 bg-white/80 backdrop-blur-sm"
             />
           </div>
         </div>
@@ -155,7 +155,7 @@ export const RelationForm: React.FC<RelationFormProps> = ({
               value={{ start: formData.targetStartTime, end: formData.targetEndTime }}
               onChange={handleTargetTimeChange}
               maxDuration={3600} // 預設最大時長 1 小時
-              className="border border-gray-200 rounded-lg p-4"
+              className="border border-gray-200 rounded-lg p-4 bg-white/80 backdrop-blur-sm"
             />
           </div>
         </div>

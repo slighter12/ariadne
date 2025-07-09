@@ -8,8 +8,24 @@ export interface VideoInfo {
   currentTime: number;
 }
 
-// 關聯類型
+// 關聯類型 - 匹配後端 snake_case 格式
 export interface Relation {
+  id: string;
+  source_video_id: string;
+  source_start_time: number;
+  source_end_time: number;
+  target_video_id: string;
+  target_start_time: number;
+  target_end_time: number;
+  relation_type: 'reference' | 'remix' | 'annotation' | 'translation' | 'reaction';
+  user_id?: string;
+  status: 'pending' | 'approved' | 'rejected';
+  created_at: string;
+  updated_at: string;
+}
+
+// 前端顯示用的關聯類型（包含 URL）
+export interface RelationDisplay {
   id: string;
   sourceVideoId: string;
   sourceVideoUrl: string;

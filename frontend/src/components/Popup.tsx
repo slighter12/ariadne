@@ -51,7 +51,7 @@ const Popup: React.FC = () => {
   }
 
   return (
-    <div className="w-80 bg-white">
+    <div className="w-80 bg-white/95 backdrop-blur-sm">
       {/* 標題 */}
       <div className="bg-blue-600 text-white p-4">
         <h1 className="text-lg font-semibold">Ariadne</h1>
