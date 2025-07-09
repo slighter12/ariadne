@@ -281,7 +281,7 @@ bun run build:extension
 
 ## 影片片段關聯設計示意
 
-![影片片段關聯設計示意圖](docs/relation.jpeg)
+![影片片段關聯設計示意圖](docs/relation.png)
 
 > 若下方 Mermaid 圖無法顯示，請參考上方靜態圖片。
 
