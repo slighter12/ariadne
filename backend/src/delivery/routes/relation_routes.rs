@@ -12,8 +12,8 @@ use crate::delivery::middleware::response_handler::{with_status, with_created_st
 use crate::state::ConcreteAppState;
 use tracing::{info, debug};
 
-// 建立路由 - 使用泛型約束
-pub fn create_router(app_state: ConcreteAppState) -> Router {
+// 關聯管理路由
+pub fn relation_router(app_state: ConcreteAppState) -> Router {
     Router::new()
         .route("/api/relations", get(get_relations).post(create_relation))
         .with_state(app_state)

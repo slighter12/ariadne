@@ -101,6 +101,40 @@ function getErrorMessage(response: ApiResponse<any>): string {
 
 // API 服務類別
 export class ApiService {
+  // 取得 API 版本資訊
+  static async getVersion(): Promise<ApiResponse<any>> {
+    try {
+      const response = await api.get('/api/version');
+      return response.data;
+    } catch (error: any) {
+      if (error.response?.data) {
+        return error.response.data;
+      }
+      return {
+        code: ERROR_CODES.INTERNAL_SERVER_ERROR,
+        message: '無法取得版本資訊',
+        details: error.message
+      };
+    }
+  }
+
+  // 檢查 API 健康狀態
+  static async healthCheck(): Promise<ApiResponse<any>> {
+    try {
+      const response = await api.get('/api/health');
+      return response.data;
+    } catch (error: any) {
+      if (error.response?.data) {
+        return error.response.data;
+      }
+      return {
+        code: ERROR_CODES.INTERNAL_SERVER_ERROR,
+        message: '健康檢查失敗',
+        details: error.message
+      };
+    }
+  }
+
   // 提交關聯
   static async submitRelation(data: RelationFormData): Promise<ApiResponse<Relation>> {
     try {

@@ -1,4 +1,17 @@
 import React, { useState, useEffect } from 'react';
+import { ApiService } from '../services/api';
+import { ERROR_CODES } from '../types';
+
+interface VersionInfo {
+  version: string;
+  name: string;
+  description: string;
+  authors: string;
+  repository: string;
+  homepage: string;
+  license: string;
+  rust_version: string;
+}
 
 const Popup: React.FC = () => {
   const [stats, setStats] = useState({
@@ -7,9 +20,12 @@ const Popup: React.FC = () => {
     approvedRelations: 0
   });
   const [isLoading, setIsLoading] = useState(true);
+  const [versionInfo, setVersionInfo] = useState<VersionInfo | null>(null);
+  const [apiStatus, setApiStatus] = useState<'connected' | 'disconnected' | 'checking'>('checking');
 
   useEffect(() => {
     loadStats();
+    checkApiStatus();
   }, []);
 
   const loadStats = async () => {
@@ -28,6 +44,29 @@ const Popup: React.FC = () => {
     }
   };
 
+  const checkApiStatus = async () => {
+    try {
+      setApiStatus('checking');
+      
+      // 檢查健康狀態
+      const healthResponse = await ApiService.healthCheck();
+      if (healthResponse.code === ERROR_CODES.SUCCESS) {
+        setApiStatus('connected');
+        
+        // 取得版本資訊
+        const versionResponse = await ApiService.getVersion();
+        if (versionResponse.code === ERROR_CODES.SUCCESS && versionResponse.data) {
+          setVersionInfo(versionResponse.data);
+        }
+      } else {
+        setApiStatus('disconnected');
+      }
+    } catch (error) {
+      console.error('Failed to check API status:', error);
+      setApiStatus('disconnected');
+    }
+  };
+
   const openOptions = () => {
     if (typeof chrome !== 'undefined' && chrome.runtime) {
       chrome.runtime.openOptionsPage();
@@ -37,6 +76,32 @@ const Popup: React.FC = () => {
   const openDashboard = () => {
     if (typeof chrome !== 'undefined' && chrome.tabs) {
       chrome.tabs.create({ url: 'http://localhost:3000/dashboard' });
+    }
+  };
+
+  const getStatusColor = () => {
+    switch (apiStatus) {
+      case 'connected':
+        return 'text-green-600';
+      case 'disconnected':
+        return 'text-red-600';
+      case 'checking':
+        return 'text-yellow-600';
+      default:
+        return 'text-gray-600';
+    }
+  };
+
+  const getStatusText = () => {
+    switch (apiStatus) {
+      case 'connected':
+        return '已連接';
+      case 'disconnected':
+        return '未連接';
+      case 'checking':
+        return '檢查中...';
+      default:
+        return '未知';
     }
   };
 
@@ -56,6 +121,25 @@ const Popup: React.FC = () => {
       <div className="bg-blue-600 text-white p-4">
         <h1 className="text-lg font-semibold">Ariadne</h1>
         <p className="text-sm text-blue-100">影片內容溯源系統</p>
+      </div>
+
+      {/* API 狀態 */}
+      <div className="px-4 py-2 bg-gray-50 border-b border-gray-200">
+        <div className="flex items-center justify-between text-sm">
+          <span className="text-gray-600">API 狀態:</span>
+          <div className="flex items-center space-x-2">
+            <div className={`w-2 h-2 rounded-full ${
+              apiStatus === 'connected' ? 'bg-green-500' : 
+              apiStatus === 'disconnected' ? 'bg-red-500' : 'bg-yellow-500'
+            }`}></div>
+            <span className={getStatusColor()}>{getStatusText()}</span>
+          </div>
+        </div>
+        {versionInfo && (
+          <div className="text-xs text-gray-500 mt-1">
+            後端版本: v{versionInfo.version}
+          </div>
+        )}
       </div>
 
       {/* 統計資訊 */}
@@ -104,7 +188,10 @@ const Popup: React.FC = () => {
 
         {/* 版本資訊 */}
         <div className="text-center text-xs text-gray-500 pt-2 border-t border-gray-200">
-          Version 1.0.0
+          <div>前端版本: 1.0.0</div>
+          {versionInfo && (
+            <div>後端版本: v{versionInfo.version}</div>
+          )}
         </div>
       </div>
     </div>

@@ -1,5 +1,4 @@
 // 共用常數
-pub const API_VERSION: &str = "1.0.0";
 pub const DEFAULT_PAGE_SIZE: i32 = 20;
 pub const MAX_PAGE_SIZE: i32 = 100;
 

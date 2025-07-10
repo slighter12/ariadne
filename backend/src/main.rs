@@ -9,7 +9,7 @@ mod repositories;
 mod services;
 
 // 引入模組
-use delivery::routes::{relation_routes::create_router, health_routes};
+use delivery::routes::{relation_routes::relation_router, health_routes};
 use delivery::middleware::{create_cors_layer, request_logger};
 use config::app_config::AppConfig;
 use tracing::info;
@@ -41,8 +41,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let app_state = state::ConcreteAppState::new(pool_arc, relation_repository, user_repository).await?;
 
     // 建立路由
-    let app = health_routes::create_health_router()
-        .merge(create_router(app_state))
+    let app = health_routes::health_router(app_state.clone())
+        .merge(relation_router(app_state))
         .layer(create_cors_layer())
         .layer(axum::middleware::from_fn(request_logger));
 

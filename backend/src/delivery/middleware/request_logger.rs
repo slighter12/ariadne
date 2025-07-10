@@ -33,16 +33,16 @@ pub async fn request_logger(
     // Log response based on status code
     match status {
         StatusCode::OK | StatusCode::CREATED => {
-            info!("📤 Response: {} {} - {} ({}ms)", method, uri, status, duration.as_millis());
+            info!("📤 Response: {} {} - {} ({:.2}ms)", method, uri, status, duration.as_secs_f64() * 1000.0);
         }
         StatusCode::BAD_REQUEST | StatusCode::NOT_FOUND => {
-            warn!("📤 Response: {} {} - {} ({}ms)", method, uri, status, duration.as_millis());
+            warn!("📤 Response: {} {} - {} ({:.2}ms)", method, uri, status, duration.as_secs_f64() * 1000.0);
         }
         StatusCode::INTERNAL_SERVER_ERROR => {
-            error!("📤 Response: {} {} - {} ({}ms)", method, uri, status, duration.as_millis());
+            error!("📤 Response: {} {} - {} ({:.2}ms)", method, uri, status, duration.as_secs_f64() * 1000.0);
         }
         _ => {
-            info!("📤 Response: {} {} - {} ({}ms)", method, uri, status, duration.as_millis());
+            info!("📤 Response: {} {} - {} ({:.2}ms)", method, uri, status, duration.as_secs_f64() * 1000.0);
         }
     }
     
