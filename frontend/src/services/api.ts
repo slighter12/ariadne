@@ -1,5 +1,6 @@
 import axios from 'axios';
 import type { Relation, RelationFormData, ApiResponse, RelationDisplay } from '../types';
+import { ERROR_CODES } from '../types';
 import { transformFormDataToBackend, transformRelationToDisplay } from '../utils/transform';
 
 // API 基礎 URL
@@ -60,6 +61,44 @@ api.interceptors.response.use(
   }
 );
 
+// 檢查 API 回應是否成功
+function isSuccessResponse<T>(response: ApiResponse<T>): boolean {
+  return response.code === 200;
+}
+
+// 取得錯誤訊息
+function getErrorMessage(response: ApiResponse<any>): string {
+  if (response.message) {
+    return response.message;
+  }
+  
+  // 根據錯誤代碼提供預設訊息
+  switch (response.code) {
+    case ERROR_CODES.VALIDATION_ERROR:
+      return '輸入資料驗證失敗';
+    case ERROR_CODES.INVALID_TIME_RANGE:
+      return '時間範圍無效';
+    case ERROR_CODES.EMPTY_VIDEO_ID:
+      return '影片 ID 不能為空';
+    case ERROR_CODES.SAME_VIDEO_IDS:
+      return '來源和目標影片不能相同';
+    case ERROR_CODES.RELATION_NOT_FOUND:
+      return '找不到指定的關聯';
+    case ERROR_CODES.USER_NOT_FOUND:
+      return '找不到指定的使用者';
+    case ERROR_CODES.VIDEO_NOT_FOUND:
+      return '找不到指定的影片';
+    case ERROR_CODES.DUPLICATE_RELATION:
+      return '關聯已存在';
+    case ERROR_CODES.DATABASE_ERROR:
+      return '資料庫錯誤';
+    case ERROR_CODES.INTERNAL_SERVER_ERROR:
+      return '伺服器內部錯誤';
+    default:
+      return '未知錯誤';
+  }
+}
+
 // API 服務類別
 export class ApiService {
   // 提交關聯
@@ -68,8 +107,17 @@ export class ApiService {
       const backendData = transformFormDataToBackend(data);
       const response = await api.post('/api/relations', backendData);
       return response.data;
-    } catch (error) {
-      throw error;
+    } catch (error: any) {
+      // 處理 axios 錯誤
+      if (error.response?.data) {
+        return error.response.data;
+      }
+      // 網路錯誤或其他錯誤
+      return {
+        code: ERROR_CODES.INTERNAL_SERVER_ERROR,
+        message: '網路連線錯誤',
+        details: error.message
+      };
     }
   }
 
@@ -77,17 +125,33 @@ export class ApiService {
   static async getVideoRelations(videoId: string): Promise<ApiResponse<RelationDisplay[]>> {
     try {
       const response = await api.get(`/api/relations?video_id=${videoId}`);
-      if (response.data.success && response.data.data) {
-        const transformedData = response.data.data.map(transformRelationToDisplay);
+      const apiResponse: ApiResponse<Relation[]> = response.data;
+      
+      if (isSuccessResponse(apiResponse)) {
+        // 處理 null 或空物件，確保回傳空陣列
+        const relations = apiResponse.data || [];
+        const transformedData = relations.map(transformRelationToDisplay);
         return {
-          success: true,
-          data: transformedData,
-          error: response.data.error
+          code: 200,
+          data: transformedData
         };
       }
-      return response.data;
-    } catch (error) {
-      throw error;
+      
+      // 錯誤回應
+      return {
+        code: apiResponse.code,
+        message: getErrorMessage(apiResponse),
+        details: apiResponse.details
+      };
+    } catch (error: any) {
+      if (error.response?.data) {
+        return error.response.data;
+      }
+      return {
+        code: ERROR_CODES.INTERNAL_SERVER_ERROR,
+        message: '網路連線錯誤',
+        details: error.message
+      };
     }
   }
 
@@ -95,9 +159,31 @@ export class ApiService {
   static async getSourceRelations(videoId: string): Promise<ApiResponse<Relation[]>> {
     try {
       const response = await api.get(`/api/sources/${videoId}`);
-      return response.data;
-    } catch (error) {
-      throw error;
+      const apiResponse: ApiResponse<Relation[]> = response.data;
+      
+      if (isSuccessResponse(apiResponse)) {
+        // 處理 null 或空物件，確保回傳空陣列
+        const relations = apiResponse.data || [];
+        return {
+          code: 200,
+          data: relations
+        };
+      }
+      
+      return {
+        code: apiResponse.code,
+        message: getErrorMessage(apiResponse),
+        details: apiResponse.details
+      };
+    } catch (error: any) {
+      if (error.response?.data) {
+        return error.response.data;
+      }
+      return {
+        code: ERROR_CODES.INTERNAL_SERVER_ERROR,
+        message: '網路連線錯誤',
+        details: error.message
+      };
     }
   }
 
@@ -107,8 +193,15 @@ export class ApiService {
       const endpoint = approved ? 'approve' : 'reject';
       const response = await api.post(`/api/relations/${relationId}/${endpoint}`);
       return response.data;
-    } catch (error) {
-      throw error;
+    } catch (error: any) {
+      if (error.response?.data) {
+        return error.response.data;
+      }
+      return {
+        code: ERROR_CODES.INTERNAL_SERVER_ERROR,
+        message: '網路連線錯誤',
+        details: error.message
+      };
     }
   }
 
@@ -116,9 +209,31 @@ export class ApiService {
   static async getPendingRelations(): Promise<ApiResponse<Relation[]>> {
     try {
       const response = await api.get('/api/relations/pending');
-      return response.data;
-    } catch (error) {
-      throw error;
+      const apiResponse: ApiResponse<Relation[]> = response.data;
+      
+      if (isSuccessResponse(apiResponse)) {
+        // 處理 null 或空物件，確保回傳空陣列
+        const relations = apiResponse.data || [];
+        return {
+          code: 200,
+          data: relations
+        };
+      }
+      
+      return {
+        code: apiResponse.code,
+        message: getErrorMessage(apiResponse),
+        details: apiResponse.details
+      };
+    } catch (error: any) {
+      if (error.response?.data) {
+        return error.response.data;
+      }
+      return {
+        code: ERROR_CODES.INTERNAL_SERVER_ERROR,
+        message: '網路連線錯誤',
+        details: error.message
+      };
     }
   }
 }

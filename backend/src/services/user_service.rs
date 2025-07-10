@@ -1,5 +1,8 @@
 use uuid::Uuid;
-use crate::domain::{User, UserAuthPayload, ApiResponse};
+use crate::domain::entities::User;
+use crate::domain::requests::UserAuthPayload;
+use crate::domain::responses::ApiResponse;
+use crate::domain::errors::ErrorCode;
 use crate::traits::UserRepositoryTrait;
 
 // Service Layer (Clean Architecture - Use Case Layer)
@@ -22,58 +25,85 @@ where
 
     // 業務邏輯：根據 ID 獲取使用者
     #[allow(dead_code)]
-    pub async fn get_user_by_id(&self, id: Uuid) -> Result<ApiResponse<User>, String> {
+    pub async fn get_user_by_id(&self, id: Uuid) -> ApiResponse<User> {
         match self.repository.find_by_id(id).await {
-            Ok(Some(user)) => Ok(ApiResponse::success(user)),
-            Ok(None) => Ok(ApiResponse::error("User not found".to_string())),
-            Err(e) => Err(format!("Database error: {}", e)),
+            Ok(Some(user)) => ApiResponse::success(user),
+            Ok(None) => ApiResponse::error(
+                ErrorCode::UserNotFound.as_u16(),
+                "User not found"
+            ),
+            Err(code) => ApiResponse::error(
+                code,
+                "Database error occurred"
+            ),
         }
     }
 
     // 業務邏輯：根據 email 獲取使用者
     #[allow(dead_code)]
-    pub async fn get_user_by_email(&self, email: &str) -> Result<ApiResponse<User>, String> {
+    pub async fn get_user_by_email(&self, email: &str) -> ApiResponse<User> {
         match self.repository.find_by_email(email).await {
-            Ok(Some(user)) => Ok(ApiResponse::success(user)),
-            Ok(None) => Ok(ApiResponse::error("User not found".to_string())),
-            Err(e) => Err(format!("Database error: {}", e)),
+            Ok(Some(user)) => ApiResponse::success(user),
+            Ok(None) => ApiResponse::error(
+                ErrorCode::UserNotFound.as_u16(),
+                "User not found"
+            ),
+            Err(code) => ApiResponse::error(
+                code,
+                "Database error occurred"
+            ),
         }
     }
 
     // 業務邏輯：根據 Google ID 獲取使用者
     #[allow(dead_code)]
-    pub async fn get_user_by_google_id(&self, google_id: &str) -> Result<ApiResponse<User>, String> {
+    pub async fn get_user_by_google_id(&self, google_id: &str) -> ApiResponse<User> {
         match self.repository.find_by_google_id(google_id).await {
-            Ok(Some(user)) => Ok(ApiResponse::success(user)),
-            Ok(None) => Ok(ApiResponse::error("User not found".to_string())),
-            Err(e) => Err(format!("Database error: {}", e)),
+            Ok(Some(user)) => ApiResponse::success(user),
+            Ok(None) => ApiResponse::error(
+                ErrorCode::UserNotFound.as_u16(),
+                "User not found"
+            ),
+            Err(code) => ApiResponse::error(
+                code,
+                "Database error occurred"
+            ),
         }
     }
 
     // 業務邏輯：創建使用者
     #[allow(dead_code)]
-    pub async fn create_user(&self, payload: UserAuthPayload) -> Result<ApiResponse<User>, String> {
+    pub async fn create_user(&self, payload: UserAuthPayload) -> ApiResponse<User> {
         match self.repository.create(&payload).await {
-            Ok(user) => Ok(ApiResponse::success(user)),
-            Err(e) => Err(format!("Database error: {}", e)),
+            Ok(user) => ApiResponse::success(user),
+            Err(code) => ApiResponse::error(
+                code,
+                "Database error occurred"
+            ),
         }
     }
 
     // 業務邏輯：更新使用者
     #[allow(dead_code)]
-    pub async fn update_user(&self, id: Uuid, payload: UserAuthPayload) -> Result<ApiResponse<User>, String> {
+    pub async fn update_user(&self, id: Uuid, payload: UserAuthPayload) -> ApiResponse<User> {
         match self.repository.update(id, &payload).await {
-            Ok(user) => Ok(ApiResponse::success(user)),
-            Err(e) => Err(format!("Database error: {}", e)),
+            Ok(user) => ApiResponse::success(user),
+            Err(code) => ApiResponse::error(
+                code,
+                "Database error occurred"
+            ),
         }
     }
 
     // 業務邏輯：更新使用者聲望
     #[allow(dead_code)]
-    pub async fn update_reputation(&self, id: Uuid, reputation: i32) -> Result<ApiResponse<User>, String> {
+    pub async fn update_reputation(&self, id: Uuid, reputation: i32) -> ApiResponse<User> {
         match self.repository.update_reputation(id, reputation).await {
-            Ok(user) => Ok(ApiResponse::success(user)),
-            Err(e) => Err(format!("Database error: {}", e)),
+            Ok(user) => ApiResponse::success(user),
+            Err(code) => ApiResponse::error(
+                code,
+                "Database error occurred"
+            ),
         }
     }
 }
@@ -100,10 +130,8 @@ mod tests {
         let result = service.create_user(payload).await;
 
         // Assert
-        assert!(result.is_ok());
-        let response = result.unwrap();
-        assert!(response.success);
-        let user = response.data.unwrap();
+        assert_eq!(result.code, 200); // 成功碼
+        let user = result.data.unwrap();
         assert_eq!(user.email, "test@example.com");
         assert_eq!(user.name, "Test User");
         assert_eq!(user.reputation, 0); // 新使用者預設聲望為 0
@@ -120,11 +148,10 @@ mod tests {
         let result = service.get_user_by_id(user_id).await;
 
         // Assert
-        assert!(result.is_ok());
-        let response = result.unwrap();
-        assert!(!response.success); // 使用者不存在
-        assert!(response.data.is_none());
-        assert_eq!(response.message.unwrap(), "User not found");
+        assert!(result.code >= 400); // 錯誤碼
+        assert!(result.data.is_none());
+        assert_eq!(result.code, 40402); // UserNotFound error code
+        assert_eq!(result.message.unwrap(), "User not found");
     }
 
     #[tokio::test]
@@ -137,9 +164,7 @@ mod tests {
         let result = service.get_user_by_email("nonexistent@example.com").await;
 
         // Assert
-        assert!(result.is_ok());
-        let response = result.unwrap();
-        assert!(!response.success);
-        assert!(response.data.is_none());
+        assert!(result.code >= 400); // 錯誤碼
+        assert!(result.data.is_none());
     }
 } 

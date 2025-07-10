@@ -30,7 +30,7 @@ async fn test_relation_service_with_mock() {
 
     // 測試創建關聯
     let result = relation_service.create_relation(payload).await;
-    assert!(result.is_ok());
+    assert_eq!(result.code, 200);
 }
 
 #[tokio::test]
@@ -49,7 +49,7 @@ async fn test_user_service_with_mock() {
 
     // 測試創建使用者
     let result = user_service.create_user(payload).await;
-    assert!(result.is_ok());
+    assert_eq!(result.code, 200);
 }
 
 // 展示泛型函數的優勢
@@ -64,7 +64,7 @@ where
 
     let result = service.get_relations(params).await;
     // 無論是 mock 還是真實實作，都可以用相同的程式碼測試
-    assert!(result.is_ok());
+    assert_eq!(result.code, 200);
 }
 
 #[tokio::test]

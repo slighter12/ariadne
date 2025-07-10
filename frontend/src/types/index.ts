@@ -40,12 +40,37 @@ export interface RelationDisplay {
   createdBy?: string;
 }
 
-// API 回應類型
+// API 回應類型 - 匹配後端新結構
 export interface ApiResponse<T> {
-  success: boolean;
-  data?: T;
-  error?: string;
+  code: number;        // 錯誤代碼 (200 = 成功, 4xx/5xx = 錯誤)
+  data?: T;           // 成功時的資料
+  message?: string;   // 錯誤訊息
+  details?: string;   // 詳細錯誤資訊
 }
+
+// 錯誤代碼常數
+export const ERROR_CODES = {
+  // 成功
+  SUCCESS: 200,
+  
+  // 驗證錯誤 (400xx)
+  VALIDATION_ERROR: 40001,
+  INVALID_TIME_RANGE: 40002,
+  EMPTY_VIDEO_ID: 40003,
+  SAME_VIDEO_IDS: 40004,
+  
+  // 找不到錯誤 (404xx)
+  RELATION_NOT_FOUND: 40401,
+  USER_NOT_FOUND: 40402,
+  VIDEO_NOT_FOUND: 40403,
+  
+  // 衝突錯誤 (409xx)
+  DUPLICATE_RELATION: 40901,
+  
+  // 伺服器錯誤 (500xx)
+  DATABASE_ERROR: 50001,
+  INTERNAL_SERVER_ERROR: 50000,
+} as const;
 
 // 表單類型
 export interface RelationFormData {

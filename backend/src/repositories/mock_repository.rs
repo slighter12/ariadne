@@ -1,8 +1,9 @@
 use async_trait::async_trait;
 use uuid::Uuid;
-use crate::domain::{Relation, CreateRelationPayload, GetRelationsParams, RelationStatus, User, UserAuthPayload};
+use crate::domain::entities::{Relation, RelationStatus, User};
+use crate::domain::requests::{CreateRelationPayload, GetRelationsParams, UserAuthPayload};
+use crate::domain::errors::ErrorCode;
 use crate::traits::{RelationRepositoryTrait, UserRepositoryTrait};
-use sqlx::Error;
 
 // Mock Repository for Testing
 // 展示如何使用泛型約束進行測試
@@ -29,7 +30,7 @@ impl MockRelationRepository {
 
 #[async_trait]
 impl RelationRepositoryTrait for MockRelationRepository {
-    async fn find_by_video_id(&self, params: &GetRelationsParams) -> Result<Vec<Relation>, Error> {
+    async fn find_by_video_id(&self, params: &GetRelationsParams) -> Result<Vec<Relation>, u16> {
         let relations: Vec<Relation> = self.relations
             .values()
             .filter(|r| r.source_video_id == params.video_id)
@@ -39,7 +40,7 @@ impl RelationRepositoryTrait for MockRelationRepository {
         Ok(relations)
     }
 
-    async fn create(&self, payload: &CreateRelationPayload) -> Result<Relation, Error> {
+    async fn create(&self, payload: &CreateRelationPayload) -> Result<Relation, u16> {
         let relation = Relation {
             id: Uuid::new_v4(),
             source_video_id: payload.source_video_id.clone(),
@@ -58,17 +59,17 @@ impl RelationRepositoryTrait for MockRelationRepository {
         Ok(relation)
     }
 
-    async fn find_by_id(&self, id: Uuid) -> Result<Option<Relation>, Error> {
+    async fn find_by_id(&self, id: Uuid) -> Result<Option<Relation>, u16> {
         Ok(self.relations.get(&id).cloned())
     }
 
-    async fn update_status(&self, id: Uuid, status: &RelationStatus) -> Result<Relation, Error> {
+    async fn update_status(&self, id: Uuid, status: &RelationStatus) -> Result<Relation, u16> {
         if let Some(mut relation) = self.relations.get(&id).cloned() {
             relation.status = status.clone();
             relation.updated_at = chrono::Utc::now();
             Ok(relation)
         } else {
-            Err(Error::RowNotFound)
+            Err(ErrorCode::RelationNotFound.as_u16())
         }
     }
 }
@@ -97,21 +98,21 @@ impl MockUserRepository {
 
 #[async_trait]
 impl UserRepositoryTrait for MockUserRepository {
-    async fn find_by_id(&self, id: Uuid) -> Result<Option<User>, Error> {
+    async fn find_by_id(&self, id: Uuid) -> Result<Option<User>, u16> {
         Ok(self.users.get(&id).cloned())
     }
 
-    async fn find_by_email(&self, email: &str) -> Result<Option<User>, Error> {
+    async fn find_by_email(&self, email: &str) -> Result<Option<User>, u16> {
         let user = self.users.values().find(|u| u.email == email).cloned();
         Ok(user)
     }
 
-    async fn find_by_google_id(&self, google_id: &str) -> Result<Option<User>, Error> {
+    async fn find_by_google_id(&self, google_id: &str) -> Result<Option<User>, u16> {
         let user = self.users.values().find(|u| u.google_id.as_deref() == Some(google_id)).cloned();
         Ok(user)
     }
 
-    async fn create(&self, payload: &UserAuthPayload) -> Result<User, Error> {
+    async fn create(&self, payload: &UserAuthPayload) -> Result<User, u16> {
         let user = User {
             id: Uuid::new_v4(),
             google_id: payload.google_id.clone(),
@@ -126,7 +127,7 @@ impl UserRepositoryTrait for MockUserRepository {
         Ok(user)
     }
 
-    async fn update(&self, id: Uuid, payload: &UserAuthPayload) -> Result<User, Error> {
+    async fn update(&self, id: Uuid, payload: &UserAuthPayload) -> Result<User, u16> {
         if let Some(mut user) = self.users.get(&id).cloned() {
             user.google_id = payload.google_id.clone();
             user.email = payload.email.clone();
@@ -135,17 +136,17 @@ impl UserRepositoryTrait for MockUserRepository {
             user.updated_at = chrono::Utc::now();
             Ok(user)
         } else {
-            Err(Error::RowNotFound)
+            Err(ErrorCode::UserNotFound.as_u16())
         }
     }
 
-    async fn update_reputation(&self, id: Uuid, reputation: i32) -> Result<User, Error> {
+    async fn update_reputation(&self, id: Uuid, reputation: i32) -> Result<User, u16> {
         if let Some(mut user) = self.users.get(&id).cloned() {
             user.reputation = reputation;
             user.updated_at = chrono::Utc::now();
             Ok(user)
         } else {
-            Err(Error::RowNotFound)
+            Err(ErrorCode::UserNotFound.as_u16())
         }
     }
 }

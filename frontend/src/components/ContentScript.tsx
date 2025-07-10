@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { createRoot } from 'react-dom/client';
 import type { VideoInfo, RelationDisplay, RelationFormData } from '../types';
+import { ERROR_CODES } from '../types';
 import { RelationForm } from './RelationForm';
 import { Notification } from './Notification';
 import { ApiService } from '../services/api';
@@ -49,18 +50,21 @@ const ContentScript: React.FC = () => {
       try {
         // 載入關聯資料
         const response = await ApiService.getVideoRelations(videoInfo.id);
-        if (response.success && response.data) {
+        if (response.code === ERROR_CODES.SUCCESS) {
+          // 處理 null 或空物件，確保使用空陣列
           setState(prev => ({ 
             ...prev, 
             relations: response.data || [],
-            isLoading: false 
+            isLoading: false,
+            error: null
           }));
         } else {
-          // API 成功但沒有資料
+          // API 失敗
           setState(prev => ({ 
             ...prev, 
             relations: [],
-            isLoading: false 
+            isLoading: false,
+            error: response.message || '載入關聯資料失敗'
           }));
         }
       } catch (error) {
@@ -98,21 +102,38 @@ const ContentScript: React.FC = () => {
 
     try {
       const response = await ApiService.submitRelation(formData);
-      if (response.success) {
+      if (response.code === ERROR_CODES.SUCCESS) {
         addNotification('success', '關聯提交成功！', 3000);
         // 重新載入關聯資料
         if (state.videoInfo) {
           const relationsResponse = await ApiService.getVideoRelations(state.videoInfo.id);
-          if (relationsResponse.success && relationsResponse.data) {
+          if (relationsResponse.code === ERROR_CODES.SUCCESS) {
+            // 處理 null 或空物件，確保使用空陣列
             setState(prev => ({ 
               ...prev, 
               relations: relationsResponse.data || [],
-              isLoading: false 
+              isLoading: false,
+              error: null
+            }));
+          } else {
+            setState(prev => ({ 
+              ...prev, 
+              isLoading: false,
+              error: relationsResponse.message || '重新載入關聯資料失敗'
             }));
           }
         }
       } else {
-        addNotification('error', response.error || '提交失敗', 5000);
+        // 根據錯誤代碼提供更具體的錯誤訊息
+        let errorMessage = response.message || '提交失敗';
+        if (response.code === ERROR_CODES.INVALID_TIME_RANGE) {
+          errorMessage = '時間範圍無效，請檢查開始和結束時間';
+        } else if (response.code === ERROR_CODES.SAME_VIDEO_IDS) {
+          errorMessage = '來源和目標影片不能相同';
+        } else if (response.code === ERROR_CODES.DUPLICATE_RELATION) {
+          errorMessage = '此關聯已存在';
+        }
+        addNotification('error', errorMessage, 5000);
         setState(prev => ({ ...prev, isLoading: false }));
       }
     } catch (error) {

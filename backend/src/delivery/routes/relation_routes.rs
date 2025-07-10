@@ -5,9 +5,12 @@ use axum::{
     routing::get,
     Router,
 };
-use crate::domain::{Relation, CreateRelationPayload, GetRelationsParams, ApiResponse};
+use crate::domain::entities::Relation;
+use crate::domain::requests::{CreateRelationPayload, GetRelationsParams};
+use crate::domain::responses::ApiResponse;
+use crate::delivery::middleware::response_handler::{with_status, with_created_status};
 use crate::state::ConcreteAppState;
-use tracing::{error, info, debug, warn};
+use tracing::{info, debug};
 
 // 建立路由 - 使用泛型約束
 pub fn create_router(app_state: ConcreteAppState) -> Router {
@@ -17,44 +20,25 @@ pub fn create_router(app_state: ConcreteAppState) -> Router {
 }
 
 // GET /api/relations?video_id=...
-pub async fn get_relations(
+async fn get_relations(
     State(app_state): State<ConcreteAppState>,
     Query(params): Query<GetRelationsParams>,
-) -> Result<Json<ApiResponse<Vec<Relation>>>, StatusCode> {
+) -> (StatusCode, Json<ApiResponse<Vec<Relation>>>) {
     debug!("Fetching relations for video_id: {}", params.video_id);
     
-    let result = app_state.get_relation_service().get_relations(params).await;
-    match result {
-        Ok(response) => Ok(Json(response)),
-        Err(e) => {
-            error!("Failed to fetch relations: {}", e);
-            Err(StatusCode::INTERNAL_SERVER_ERROR)
-        }
-    }
+    let response = app_state.get_relation_service().get_relations(params).await;
+    with_status(Json(response))
 }
 
 // POST /api/relations
-pub async fn create_relation(
+async fn create_relation(
     State(app_state): State<ConcreteAppState>,
     Json(payload): Json<CreateRelationPayload>,
-) -> Result<(StatusCode, Json<ApiResponse<Relation>>), StatusCode> {
+) -> (StatusCode, Json<ApiResponse<Relation>>) {
     debug!("Creating relation: source_video_id={}, target_video_id={}", 
            payload.source_video_id, payload.target_video_id);
     
-    let result = app_state.get_relation_service().create_relation(payload).await;
-    match result {
-        Ok(response) => {
-            if response.success {
-                info!("Successfully created relation");
-                Ok((StatusCode::CREATED, Json(response)))
-            } else {
-                warn!("Failed to create relation: {:?}", response.message);
-                Ok((StatusCode::BAD_REQUEST, Json(response)))
-            }
-        }
-        Err(e) => {
-            error!("Failed to create relation: {}", e);
-            Err(StatusCode::INTERNAL_SERVER_ERROR)
-        }
-    }
+    let response = app_state.get_relation_service().create_relation(payload).await;
+    info!("Relation creation completed with code: {}", response.code);
+    with_created_status(Json(response))
 } 

@@ -9,10 +9,10 @@ mod repositories;
 mod services;
 
 // 引入模組
-use delivery::routes::create_router;
-use delivery::middleware::create_cors_layer;
+use delivery::routes::{relation_routes::create_router, health_routes};
+use delivery::middleware::{create_cors_layer, request_logger};
 use config::app_config::AppConfig;
-use tracing::{info, warn};  
+use tracing::info;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -30,7 +30,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     
     // 檢查資料庫健康狀態
     if let Err(e) = database::check_database_health(&pool_arc).await {
-        warn!("Database health check failed: {}", e);
+        panic!("Database health check failed: {}", e);
     }
 
     // 建立 repositories (使用 Arc 中的 Pool)
@@ -41,8 +41,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let app_state = state::ConcreteAppState::new(pool_arc, relation_repository, user_repository).await?;
 
     // 建立路由
-    let app = create_router(app_state)
-        .layer(create_cors_layer());
+    let app = health_routes::create_health_router()
+        .merge(create_router(app_state))
+        .layer(create_cors_layer())
+        .layer(axum::middleware::from_fn(request_logger));
 
     // 啟動伺服器
     let addr: std::net::SocketAddr = format!("{}:{}", config.server.host, config.server.port)

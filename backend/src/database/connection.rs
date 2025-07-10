@@ -14,8 +14,3 @@ pub async fn create_connection_pool(database_url: &str, max_connections: u32) ->
     info!("✅ Database connection pool created successfully");
     Ok(Arc::new(pool))
 }
-
-// 取得資料庫連接池的引用
-// pub fn get_db_pool(pool: &Arc<Pool<Postgres>>) -> &Pool<Postgres> {
-//     pool.as_ref()
-// } 

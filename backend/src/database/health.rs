@@ -2,7 +2,7 @@ use sqlx::{Pool, Postgres};
 use tracing::{info, debug};
 
 /// 驗證資料庫連接
-pub async fn check_database_connection(pool: &Pool<Postgres>) -> Result<(), sqlx::Error> {
+async fn check_database_connection(pool: &Pool<Postgres>) -> Result<(), sqlx::Error> {
     // 使用 PostgreSQL 內建的連接檢查
     sqlx::query("SELECT pg_is_in_recovery()")
         .fetch_one(pool)
