@@ -165,76 +165,148 @@ pub async fn get_video_info_from_url(url: &str, api_key: &str) -> Result<YouTube
     get_video_info(&video_id, api_key).await
 }
 
-#[test]
-fn test_extract_video_id() {
-    assert_eq!(extract_video_id("https://www.youtube.com/watch?v=dQw4w9WgXcQ"), Some("dQw4w9WgXcQ".to_string()));
-    assert_eq!(extract_video_id("https://youtu.be/dQw4w9WgXcQ"), Some("dQw4w9WgXcQ".to_string()));
-    assert_eq!(extract_video_id("https://www.youtube.com/watch?v=dQw4w9WgXcQ&list=PL1234567890"), None);
-    assert_eq!(extract_video_id("https://www.youtube.com/watch?v=dQw4w9WgXcQ&list=PL1234567890"), None);
-}
+#[cfg(test)]
+mod tests {
+    use super::*;
 
-#[test]
-fn test_parse_iso8601_duration() {
-    assert_eq!(parse_iso8601_duration("PT1H2M3S"), 3723);
-    assert_eq!(parse_iso8601_duration("PT1M30S"), 90);
-    assert_eq!(parse_iso8601_duration("PT1S"), 1);
-}
+    mod video_id_extraction {
+        use super::*;
 
-#[tokio::test]
-async fn test_get_video_info_from_url() {
-    let url = "https://www.youtube.com/watch?v=dQw4w9WgXcQ";
-    if let Ok(api_key) = std::env::var("YOUTUBE_API_KEY") {
-        let result = get_video_info_from_url(url, &api_key).await;
-        assert!(result.is_ok());
-    } else {
-        println!("Skipping test: YOUTUBE_API_KEY not set");
+        #[test]
+        fn test_standard_youtube_url() {
+            assert_eq!(
+                extract_video_id("https://www.youtube.com/watch?v=dQw4w9WgXcQ"), 
+                Some("dQw4w9WgXcQ".to_string())
+            );
+        }
+
+        #[test]
+        fn test_short_youtube_url() {
+            assert_eq!(
+                extract_video_id("https://youtu.be/dQw4w9WgXcQ"), 
+                Some("dQw4w9WgXcQ".to_string())
+            );
+        }
+
+        #[test]
+        fn test_url_with_playlist_should_extract_video_id() {
+            assert_eq!(
+                extract_video_id("https://www.youtube.com/watch?v=dQw4w9WgXcQ&list=PL1234567890"), 
+                Some("dQw4w9WgXcQ".to_string())
+            );
+        }
+
+        #[test]
+        fn test_invalid_url() {
+            assert_eq!(extract_video_id("https://example.com"), None);
+        }
     }
-}
 
-#[tokio::test]
-async fn test_get_video_info() {
-    let video_id = "dQw4w9WgXcQ";
-    if let Ok(api_key) = std::env::var("YOUTUBE_API_KEY") {
-        let result = get_video_info(video_id, &api_key).await;
-        assert!(result.is_ok());
-    } else {
-        println!("Skipping test: YOUTUBE_API_KEY not set");
+    mod duration_parsing {
+        use super::*;
+
+        #[test]
+        fn test_parse_iso8601_duration() {
+            assert_eq!(parse_iso8601_duration("PT1H2M3S"), 3723);
+            assert_eq!(parse_iso8601_duration("PT1M30S"), 90);
+            assert_eq!(parse_iso8601_duration("PT1S"), 1);
+        }
+
+        #[test]
+        fn test_parse_complex_duration() {
+            assert_eq!(parse_iso8601_duration("PT2H15M30S"), 8130);
+            assert_eq!(parse_iso8601_duration("PT30S"), 30);
+            assert_eq!(parse_iso8601_duration("PT1H"), 3600);
+            assert_eq!(parse_iso8601_duration("PT1M"), 60);
+        }
     }
-}
 
-#[test]
-fn test_validate_time_range() {
-    // 測試有效的時間範圍
-    assert!(validate_time_range(0, 30, Some(60)).is_ok());
-    assert!(validate_time_range(10, 50, Some(100)).is_ok());
-    
-    // 測試無效的時間範圍
-    assert!(validate_time_range(-1, 30, Some(60)).is_err()); // 負數
-    assert!(validate_time_range(30, 10, Some(60)).is_err()); // 開始時間大於結束時間
-    assert!(validate_time_range(0, 70, Some(60)).is_err()); // 超出影片時長
-    assert!(validate_time_range(0, 3601, None).is_err()); // 超過1小時限制
-}
+    mod time_validation {
+        use super::*;
 
-#[test]
-fn test_format_time() {
-    assert_eq!(format_time(60), "01:00");
-    assert_eq!(format_time(120), "02:00");
-    assert_eq!(format_time(121), "02:01");
-    assert_eq!(format_time(3600), "01:00:00");
-}
+        #[test]
+        fn test_valid_time_ranges() {
+            assert!(validate_time_range(0, 30, Some(60)).is_ok());
+            assert!(validate_time_range(10, 50, Some(100)).is_ok());
+        }
 
-#[test]
-fn test_youtube_duration_limits() {
-    // 測試 YouTube 影片時長限制
-    assert!(MIN_RELATION_DURATION == 1);
-    assert!(MAX_RELATION_DURATION == 12 * 3600); // 12 小時
-    
-    // 測試有效的時長
-    assert!(1 >= MIN_RELATION_DURATION && 1 <= MAX_RELATION_DURATION);
-    assert!(3600 >= MIN_RELATION_DURATION && 3600 <= MAX_RELATION_DURATION); // 1 小時
-    assert!(12 * 3600 >= MIN_RELATION_DURATION && 12 * 3600 <= MAX_RELATION_DURATION); // 12 小時
-    
-    // 測試無效的時長
-    assert!(0 < MIN_RELATION_DURATION); // 0 秒無效
-    assert!(13 * 3600 > MAX_RELATION_DURATION); // 13 小時無效
+        #[test]
+        fn test_invalid_time_ranges() {
+            // 負數時間
+            assert!(validate_time_range(-1, 30, Some(60)).is_err());
+            
+            // 開始時間大於結束時間
+            assert!(validate_time_range(30, 10, Some(60)).is_err());
+            
+            // 超出影片時長
+            assert!(validate_time_range(0, 70, Some(60)).is_err());
+            
+            // 超過1小時限制
+            assert!(validate_time_range(0, 3601, None).is_err());
+        }
+    }
+
+    mod time_formatting {
+        use super::*;
+
+        #[test]
+        fn test_format_time() {
+            assert_eq!(format_time(60), "01:00");
+            assert_eq!(format_time(120), "02:00");
+            assert_eq!(format_time(121), "02:01");
+            assert_eq!(format_time(3600), "01:00:00");
+        }
+
+        #[test]
+        fn test_format_long_duration() {
+            assert_eq!(format_time(3661), "01:01:01"); // 1小時1分1秒
+            assert_eq!(format_time(7325), "02:02:05"); // 2小時2分5秒
+        }
+    }
+
+    mod youtube_limits {
+        use super::*;
+
+        #[test]
+        fn test_youtube_duration_limits() {
+            // 測試 YouTube 影片時長限制
+            assert!(MIN_RELATION_DURATION == 1);
+            assert!(MAX_RELATION_DURATION == 12 * 3600); // 12 小時
+            
+            // 測試有效的時長
+            assert!(1 >= MIN_RELATION_DURATION && 1 <= MAX_RELATION_DURATION);
+            assert!(3600 >= MIN_RELATION_DURATION && 3600 <= MAX_RELATION_DURATION); // 1 小時
+            assert!(12 * 3600 >= MIN_RELATION_DURATION && 12 * 3600 <= MAX_RELATION_DURATION); // 12 小時
+            
+            // 測試無效的時長
+            assert!(0 < MIN_RELATION_DURATION); // 0 秒無效
+            assert!(13 * 3600 > MAX_RELATION_DURATION); // 13 小時無效
+        }
+    }
+
+    mod api_integration {
+        use super::*;
+
+        #[tokio::test]
+        async fn test_get_video_info_from_url() {
+            let url = "https://www.youtube.com/watch?v=dQw4w9WgXcQ";
+            if let Ok(api_key) = std::env::var("YOUTUBE_API_KEY") {
+                let result = get_video_info_from_url(url, &api_key).await;
+                assert!(result.is_ok());
+            } else {
+                println!("Skipping test: YOUTUBE_API_KEY not set");
+            }
+        }
+
+        #[tokio::test]
+        async fn test_get_video_info() {
+            let video_id = "dQw4w9WgXcQ";
+            if let Ok(api_key) = std::env::var("YOUTUBE_API_KEY") {
+                let result = get_video_info(video_id, &api_key).await;
+                assert!(result.is_ok());
+            } else {
+                println!("Skipping test: YOUTUBE_API_KEY not set");
+            }
+        }
+    }
 }

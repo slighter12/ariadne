@@ -25,10 +25,18 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .with_ansi(config.logging.color)
         .init();
     
-    // 建立資料庫連接池
-    let pool_arc = database::create_connection_pool(&config.database.url, config.database.max_connections).await?;
+    // 建立資料庫連接池（帶有 retry 機制）
+    let pool_arc = database::create_connection_pool_with_retry(
+        &config.database.url, 
+        config.database.max_connections,
+        config.database.max_retries,
+        config.database.retry_delay,
+        config.database.acquire_timeout,
+        config.database.idle_timeout,
+        config.database.max_lifetime
+    ).await?;
     
-    // 檢查資料庫健康狀態
+    // 檢查資料庫健康狀態（帶有 retry 機制）
     if let Err(e) = database::check_database_health(&pool_arc).await {
         panic!("Database health check failed: {}", e);
     }
