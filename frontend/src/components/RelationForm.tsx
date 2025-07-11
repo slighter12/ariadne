@@ -7,12 +7,14 @@ interface RelationFormProps {
   onSubmit: (data: RelationFormData) => void;
   isLoading?: boolean;
   className?: string;
+  currentVideoDuration?: number; // 當前影片的時長
 }
 
 export const RelationForm: React.FC<RelationFormProps> = ({
   onSubmit,
   isLoading = false,
-  className = ''
+  className = '',
+  currentVideoDuration = 3600 // 預設最大時長 1 小時
 }) => {
   const [formData, setFormData] = useState<RelationFormData>({
     sourceVideoUrl: '',
@@ -198,7 +200,7 @@ export const RelationForm: React.FC<RelationFormProps> = ({
             <TimeSelector
               value={{ start: formData.sourceStartTime, end: formData.sourceEndTime }}
               onChange={handleSourceTimeChange}
-              maxDuration={3600} // 預設最大時長 1 小時
+              maxDuration={currentVideoDuration}
               className="border border-gray-200 rounded-lg p-4 bg-white/80 backdrop-blur-sm"
             />
           </div>
@@ -241,7 +243,7 @@ export const RelationForm: React.FC<RelationFormProps> = ({
             <TimeSelector
               value={{ start: formData.targetStartTime, end: formData.targetEndTime }}
               onChange={handleTargetTimeChange}
-              maxDuration={3600} // 預設最大時長 1 小時
+              maxDuration={currentVideoDuration}
               className="border border-gray-200 rounded-lg p-4 bg-white/80 backdrop-blur-sm"
             />
           </div>

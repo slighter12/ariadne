@@ -8,6 +8,16 @@ export interface VideoInfo {
   currentTime: number;
 }
 
+// 後端 API 返回的影片資訊類型
+export interface VideoInfoResponse {
+  id: string;
+  title: string;
+  channel_title: string;
+  duration: number;
+  published_at?: string;
+  description?: string;
+}
+
 // 關聯類型 - 匹配後端 snake_case 格式
 export interface Relation {
   id: string;

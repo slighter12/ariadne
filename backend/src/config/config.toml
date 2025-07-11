@@ -17,4 +17,7 @@ port = 8000
 # 日誌等級 (debug, info, warn, error)
 level = "info"
 # 是否啟用彩色輸出
-color = true 
+color = true
+
+# YouTube API 配置
+youtube_api_key = "" 

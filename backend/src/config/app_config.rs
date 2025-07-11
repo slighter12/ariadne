@@ -7,6 +7,7 @@ pub struct AppConfig {
     pub database: Database,
     pub server: Server,
     pub logging: Logging,
+    pub youtube_api_key: Option<String>,
 }
 
 #[derive(Debug, Clone, Deserialize)]
@@ -39,5 +40,10 @@ impl AppConfig {
 
         let config: AppConfig = settings.try_deserialize()?;
         Ok(config)
+    }
+
+    // 載入配置（別名方法）
+    pub fn load() -> Result<Self, Box<dyn std::error::Error>> {
+        Self::from_env()
     }
 }

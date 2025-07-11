@@ -5,7 +5,7 @@ import { ERROR_CODES } from '../types';
 import { RelationForm } from './RelationForm';
 import { Notification } from './Notification';
 import { ApiService } from '../services/api';
-import { isVideoPage, parseVideoInfo, watchYouTubePageChanges } from '../utils/youtube';
+import { isVideoPage, parseVideoInfo, watchYouTubePageChanges, waitForVideoDuration, getVideoDurationFromPage } from '../utils/youtube';
 
 interface ContentScriptState {
   isVisible: boolean;
@@ -34,18 +34,44 @@ const ContentScript: React.FC = () => {
         return;
       }
 
-      const videoInfo = parseVideoInfo();
+      // 先嘗試解析基本影片資訊
+      let videoInfo = parseVideoInfo();
       if (!videoInfo) {
         setState(prev => ({ ...prev, isVisible: false }));
         return;
       }
 
-      setState(prev => ({ 
-        ...prev, 
-        isVisible: true, 
-        videoInfo,
-        isLoading: true 
-      }));
+      // 如果時長為 0，嘗試等待影片時長載入
+      if (videoInfo.duration === 0) {
+        setState(prev => ({ 
+          ...prev, 
+          isVisible: true, 
+          videoInfo,
+          isLoading: true 
+        }));
+
+        try {
+          // 等待影片時長載入（最多等待 10 秒）
+          const duration = await waitForVideoDuration(10000);
+          if (duration > 0) {
+            videoInfo = { ...videoInfo, duration };
+            setState(prev => ({ ...prev, videoInfo }));
+          } else {
+            // 如果還是無法獲取時長，顯示警告
+            addNotification('warning', '無法獲取影片時長，請確保影片已完全載入', 5000);
+          }
+        } catch (error) {
+          console.warn('Failed to wait for video duration:', error);
+          addNotification('warning', '影片時長載入超時，請重新整理頁面', 5000);
+        }
+      } else {
+        setState(prev => ({ 
+          ...prev, 
+          isVisible: true, 
+          videoInfo,
+          isLoading: true 
+        }));
+      }
 
       try {
         // 載入關聯資料
@@ -253,6 +279,7 @@ const ContentScript: React.FC = () => {
                 <RelationForm
                   onSubmit={handleSubmitRelation}
                   isLoading={state.isLoading}
+                  currentVideoDuration={state.videoInfo?.duration || 3600}
                 />
               </div>
             </div>

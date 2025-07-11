@@ -52,9 +52,11 @@ install:
 # 完整設置開發環境
 setup: install db-setup
 	@echo "✅ Full development environment setup complete!"
-	@echo "Run 'make docker-up' to start services"
-	@echo "Run 'make backend-run' for backend server"
-	@echo "Run 'make frontend-run' for frontend development server"
+	@echo ""
+	@echo "📋 Next steps:"
+	@echo "1. Run 'make docker-up' to start services"
+	@echo "2. Run 'make backend-run' for backend server"
+	@echo "3. Run 'make frontend-dev' for frontend development server"
 
 # 建置所有專案
 build:

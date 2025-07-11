@@ -1,5 +1,5 @@
 import axios from 'axios';
-import type { Relation, RelationFormData, ApiResponse, RelationDisplay } from '../types';
+import type { Relation, RelationFormData, ApiResponse, RelationDisplay, VideoInfo, VideoInfoResponse } from '../types';
 import { ERROR_CODES } from '../types';
 import { transformFormDataToBackend, transformRelationToDisplay } from '../utils/transform';
 
@@ -184,6 +184,33 @@ export class ApiService {
       return {
         code: ERROR_CODES.INTERNAL_SERVER_ERROR,
         message: '網路連線錯誤',
+        details: error.message
+      };
+    }
+  }
+
+  // 取得影片資訊
+  static async getVideoInfo(url: string): Promise<ApiResponse<VideoInfoResponse>> {
+    try {
+      const response = await api.get(`/api/video/info?url=${encodeURIComponent(url)}`);
+      const apiResponse: ApiResponse<VideoInfoResponse> = response.data;
+      
+      if (isSuccessResponse(apiResponse)) {
+        return apiResponse;
+      }
+      
+      return {
+        code: apiResponse.code,
+        message: getErrorMessage(apiResponse),
+        details: apiResponse.details
+      };
+    } catch (error: any) {
+      if (error.response?.data) {
+        return error.response.data;
+      }
+      return {
+        code: ERROR_CODES.INTERNAL_SERVER_ERROR,
+        message: '無法獲取影片資訊',
         details: error.message
       };
     }
