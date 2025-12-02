@@ -1,0 +1,25 @@
+# Rust
+target/
+Cargo.lock
+
+# Rust backup files
+**/*.rs.bk
+
+# MSVC Windows builds
+*.pdb
+
+# Cargo mutants
+**/mutants.out*/
+
+# Database
+*.db
+*.sqlite
+
+# SQLx
+.sqlxconfig
+.sqlx/
+
+# Config test files
+config/*_test.toml
+config/*_test.json
+config/*_test.yaml

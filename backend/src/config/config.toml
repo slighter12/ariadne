@@ -1,0 +1,30 @@
+# Ariadne Backend Configuration
+# 統一配置檔案 - 可透過環境變數覆蓋
+
+[database]
+# 資料庫連接 URL
+url = "postgres://ariadne_user:ariadne_password@localhost:5432/ariadne_db"
+# 最大連接數
+max_connections = 5
+# 連接池超時設定（秒）
+acquire_timeout = 30
+idle_timeout = 300
+max_lifetime = 1800
+# 重試設定
+max_retries = 5
+retry_delay = 3
+
+[server]
+# 伺服器監聽地址
+host = "0.0.0.0"
+# 伺服器監聽端口
+port = 8000
+
+[logging]
+# 日誌等級 (debug, info, warn, error)
+level = "info"
+# 是否啟用彩色輸出
+color = true
+
+# YouTube API 配置
+youtube_api_key = ""
